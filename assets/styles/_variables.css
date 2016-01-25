@@ -1,0 +1,9 @@
+:root {
+  --font-family: sans-serif;
+  --body-font-size: 100%;
+  --body-font-weight: 300;
+  --heading-font-weight: 300;
+  --bold-font-weight: 500;
+  --button-font-weight: 300;
+  --body-letter-spacing: 0.025rem;
+}
