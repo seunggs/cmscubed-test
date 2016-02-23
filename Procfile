@@ -1,1 +1,1 @@
-web: npm run heroku
+web: babel-node --presets es2015 -- server.js
