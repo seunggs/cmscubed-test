@@ -137,9 +137,9 @@ export const isPreview = () => {
     3) If the id matches top domain, then it's being called as a preview
   */
   const parentElem = global.frameElement
-  if (R.isNil(parentElem)) { return false }
   console.log('parentElem: ', parentElem)
   console.log('parentElem id: ', parentElem.id)
+  if (R.isNil(parentElem)) { return false }
   return parentElem.id === 'cmscubed-preview' ? true : false
 }
 
