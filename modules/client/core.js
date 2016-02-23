@@ -131,17 +131,11 @@ export const replaceContentSchemaValuesWithPlaceholders = R.curry((contentPlaceh
 /* --- IMPURE --------------------------------------------------------------- */
 
 export const isPreview = () => {
-  /*
-    1) First see if it's being called inside iframe
-    2) If so, get the iframe element and see what the id is
-    3) If the id matches top domain, then it's being called as a preview
-  */
-  console.log('global.frameElement: ', global.frameElement)
-  const parentElem = global.frameElement
-  console.log('parentElem: ', parentElem)
-  console.log('parentElem id: ', parentElem.id)
-  if (R.isNil(parentElem)) { return false }
-  return R.prop('id', parentElem) === 'cmscubed-preview' ? true : false
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    return true;
+  }
 }
 
 // updatePageContentOnSchemaChange :: {*} -> String -> {*} -> {*} -> IMPURE (send POST request)
@@ -222,11 +216,6 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
           2) Receive and return subsequent socket.io event for updatedContent
         Otherwise, return the initial routeContent only
       */
-
-      console.log('global.frameElement: ', global.frameElement)
-      console.log('window.frameElement: ', window.frameElement)
-      const parentElem = global.frameElement
-      console.log('parentElem: ', parentElem)
 
       if (isPreview()) {
         console.log('In preview...')
