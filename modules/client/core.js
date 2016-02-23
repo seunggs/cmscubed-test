@@ -224,6 +224,7 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
       */
 
       console.log('global.frameElement: ', global.frameElement)
+      console.log('window.frameElement: ', window.frameElement)
       const parentElem = global.frameElement
       console.log('parentElem: ', parentElem)
 
