@@ -25,7 +25,8 @@ export const sanitizeRoute = R.curry(route => {
 })
 
 // convertEnvToShortEnv :: String -> String
-export const convertEnvToShortEnv = R.compose(R.toLower, R.replace('Domain', ''), R.replace('preview', ''))
+// export const convertEnvToShortEnv = R.compose(R.toLower, R.replace('Domain', ''), R.replace('preview', ''))
+export const convertEnvToShortEnv = R.compose(R.toLower, R.replace('Domain', ''))
 
 // createEncodedQueryStr :: [{*}] -> String
 export const createEncodedQueryStr = R.curry(queryObjsArray => {
@@ -112,7 +113,6 @@ export const getPageContent = R.curry((route, rootContent) => {
 
 // replaceContentSchemaValuesWithPlaceholders :: {*} -> {*}
 export const replaceContentSchemaValuesWithPlaceholders = R.curry((contentPlaceholderChar, contentSchema) => {
-  // &#8212
   const shallowUpdateValuesWithPlaceholders = R.curry(obj => {
     return R.mapObjIndexed((value, key) => {
       if (R.either(R.is(String), R.is(Number))(value)) {
@@ -129,14 +129,6 @@ export const replaceContentSchemaValuesWithPlaceholders = R.curry((contentPlaceh
 })
 
 /* --- IMPURE --------------------------------------------------------------- */
-
-export const isPreview = () => {
-  try {
-    return window.self !== window.top;
-  } catch (e) {
-    return true;
-  }
-}
 
 // updatePageContentOnSchemaChange :: {*} -> String -> {*} -> {*} -> IMPURE (send POST request)
 export const updatePageContentOnSchemaChange = (localStorageObj, route, rootContent, schemaObj) => {
@@ -196,9 +188,9 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
   const {excludedRoutes = [], contentPlaceholder} = options
 
   // Send a POST request for initial content
-  return getInitContent$$(projectDomain, currentDomain, route, excludedRoutes)
+  const getInitContent$ = getInitContent$$(projectDomain, currentDomain, route, excludedRoutes)
     .startWith({projectDetails: {}})
-    .flatMap(initContentObj => {
+    .map(initContentObj => {
       const {projectDetails, env, locale, routeContent} = initContentObj
 
       // First set localStorage items
@@ -207,26 +199,31 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
       global.localStorage.setItem('projectDetails', JSON.stringify(projectDetails))
       global.localStorage.setItem('projectDomain', projectDetails.projectDomain)
       global.localStorage.setItem('env', env) // prod or staging
-      global.localStorage.setItem('locale', locale) // prod or staging
-      // global.localStorage.setItem('isPreview', isPreview)
+      global.localStorage.setItem('locale', locale)
 
-      /*
-        If this is PREVIEW, return the initial routeContent and then:
-          1) Load socket.io client script
-          2) Receive and return subsequent socket.io event for updatedContent
-        Otherwise, return the initial routeContent only
-      */
+      return routeContent
+    })
 
-      if (isPreview()) {
+  /*
+    If this receives a cross domain message from the parent (cms), then it's PREVIEW.
+    If this is PREVIEW:
+      1) Load socket.io client script
+      2) Receive and return subsequent socket.io event for updatedContent
+  */
+  const getUpdatedContentWS$ = checkIsPreview$
+    .flatMap(isPreview => {
+      if (isPreview) {
         console.log('In preview...')
-        const io = require('socket.io-client')
+        // TODO: dynamically load io script here
         const socket = io.connect(config.host + ':' + config.port)
-        return getUpdatedContentWS$$(socket).startWith(routeContent)
+        return getUpdatedContentWS$$(socket)
       } else {
-        console.log('Not in preview...')
-        return Rx.Observable.return(routeContent)
+        return Rx.Observable.return({})
       }
     })
+
+  return Rx.Observable
+    .merge(getInitContent$, getUpdatedContentWS$)
     .scan(R.merge)
 })
 
@@ -247,11 +244,8 @@ export const getContent = R.curry((route, rootContent) => {
   // Show the content immediately from contentSchema if rootContent hasn't arrived
   if (R.isNil(rootContent)) {
     // Replace contentSchema values with placeholders if contentPlaceholder is true
-    console.log('Waiting for rootContent to arrive...')
     if (global.localStorage.getItem('contentPlaceholder') !== 'undefined') {
       const contentPlaceholderChar = global.localStorage.getItem('contentPlaceholder')
-      console.log('contentPlaceholder: ', contentPlaceholderChar)
-      console.log('replace with contentPlaceholder: ', replaceContentSchemaValuesWithPlaceholders(contentPlaceholderChar, contentSchema))
       return replaceContentSchemaValuesWithPlaceholders(contentPlaceholderChar, contentSchema)
     } else {
       return contentSchema

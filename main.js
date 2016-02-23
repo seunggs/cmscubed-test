@@ -21,7 +21,7 @@ const routes = (
   </Route>
 )
 
-getRootContent('cmscubed-test.com', '/', {excludedRoutes: [], contentPlaceholder: '*'}).subscribe(rootContent => {
+getRootContent('cmscubed-test.com', '/', {excludedRoutes: [], contentPlaceholder: '▄'}).subscribe(rootContent => {
   console.log('rootContent arrived! ', rootContent)
   const createElement = (Component, props) => {
     props.rootContent = rootContent
