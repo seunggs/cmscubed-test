@@ -29,6 +29,12 @@ export const getInitContent$$ = (projectDomain, domain, route, excludedRoutes) =
   })
 }
 
+export const checkIsPreview$ = Rx.Observable.fromEvent(global, 'message')
+  .map(e => {
+    if (e.origin !== 'https://cmscubed.com' || e.origin !== 'http://127.0.0.1:3333') { return false }
+    return true
+  })
+
 export const getUpdatedContentWS$$ = socket => {
   return Rx.Observable.create(observer => {
     let cancelled = false

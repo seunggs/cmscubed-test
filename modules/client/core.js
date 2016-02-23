@@ -1,7 +1,7 @@
 import R from 'ramda'
 import Rx from 'rx-lite'
 import config from './config'
-import {updatePageContent$$, getInitContent$$, getUpdatedContentWS$$} from './observables'
+import {updatePageContent$$, getInitContent$$, getUpdatedContentWS$$, checkIsPreview$} from './observables'
 
 /* --- PURE ----------------------------------------------------------------- */
 
