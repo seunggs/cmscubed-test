@@ -223,6 +223,10 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
         Otherwise, return the initial routeContent only
       */
 
+      console.log('global.frameElement: ', global.frameElement)
+      const parentElem = global.frameElement
+      console.log('parentElem: ', parentElem)
+
       if (isPreview()) {
         console.log('In preview...')
         const io = require('socket.io-client')
