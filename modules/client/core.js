@@ -136,6 +136,7 @@ export const isPreview = () => {
     2) If so, get the iframe element and see what the id is
     3) If the id matches top domain, then it's being called as a preview
   */
+  console.log('global.frameElement: ', global.frameElement)
   const parentElem = global.frameElement
   console.log('parentElem: ', parentElem)
   console.log('parentElem id: ', parentElem.id)
