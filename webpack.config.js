@@ -24,9 +24,10 @@ module.exports = {
 	},
 	devServer: {
     host: '127.0.0.1',
-		port: 4000
+		port: 4000,
+    historyApiFallback: true // required to use browserHistory (i.e. no hash) for react-router
 	},
-  devtool: 'eval-source-map',
+  // devtool: 'eval-source-map',
 	module: {
 		loaders: [
 			{
@@ -37,6 +38,10 @@ module.exports = {
 					presets: ['es2015', 'react']
 				}
 			},
+      {
+        test:   /\.json$/,
+        loader: "json-loader"
+      },
 			{
         test:   /\.css$/,
         loader: "style-loader!css-loader!postcss-loader"
