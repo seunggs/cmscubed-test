@@ -140,7 +140,7 @@ export const isPreview = () => {
   console.log('parentElem: ', parentElem)
   console.log('parentElem id: ', parentElem.id)
   if (R.isNil(parentElem)) { return false }
-  return parentElem.id === 'cmscubed-preview' ? true : false
+  return R.prop('id', parentElem) === 'cmscubed-preview' ? true : false
 }
 
 // updatePageContentOnSchemaChange :: {*} -> String -> {*} -> {*} -> IMPURE (send POST request)
