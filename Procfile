@@ -1,1 +1,1 @@
-web: npm run nodemon
+web: npm run heroku
