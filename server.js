@@ -22,4 +22,4 @@ app.use(express.static(__dirname))
 // set up router
 app.use('/', routes);
 
-server.listen(config.port, config.host, () => console.log(`Listening on ${config.port}`))
+server.listen(config.port, () => console.log(`Listening on ${config.port}`))
