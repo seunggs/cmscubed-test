@@ -16,6 +16,7 @@ export const getInitContent$$ = (projectDomain, domain, route, excludedRoutes) =
       fetch(config.apiBase + '/api/client/contents/init?' + encodedQueryStr)
         .then(data => data.json())
         .then(contentInitObj => {
+          console.log('contentInitObj: ', contentInitObj)
           observer.onNext(contentInitObj)
           observer.onCompleted()
         })
@@ -31,18 +32,18 @@ export const getInitContent$$ = (projectDomain, domain, route, excludedRoutes) =
 
 export const checkIsPreview$ = Rx.Observable.fromEvent(global, 'message')
   .map(e => {
-    if (e.origin !== 'https://cmscubed.com' || e.origin !== 'http://127.0.0.1:3333') { return false }
-    return true
+    console.log('checkIsPreview$ e: ', e)
+    if (e.origin !== 'https://cmscubed.com' || e.origin !== 'http://127.0.0.1:3333') { return null }
+    return e
   })
 
-export const getUpdatedContentWS$$ = socket => {
+export const getUpdatedRouteContentWS$$ = socket => {
   return Rx.Observable.create(observer => {
     let cancelled = false
 
     if (!cancelled) {
-      console.log('Inside getUpdatedContentWS$$')
-      // TODO: add contentField:update event listener as well and return routeContent from it
       socket.on('routeContent:fromDB', routeContent => {
+        console.log('getUpdatedRouteContentWS$$ routeContent received!')
         observer.onNext(routeContent)
       })
     }
@@ -54,6 +55,34 @@ export const getUpdatedContentWS$$ = socket => {
   })
 }
 
+export const getUpdatedContentFieldWS$$ = socket => {
+  return Rx.Observable.create(observer => {
+    let cancelled = false
+
+    if (!cancelled) {
+      socket.on('contentField:update', fieldObj => {
+        // fieldObj: {keyPath, value}
+        observer.onNext(fieldObj)
+      })
+    }
+
+    return () => {
+      cancelled = true
+      console.log('getInitContent$$ disposed')
+    }
+  })
+}
+
+export const getUpdatedContentWS$$ = socket => {
+  return Rx.Observable.combineLatest(
+    getUpdatedRouteContentWS$$(socket),
+    getUpdatedContentFieldWS$$(socket)
+  ).map(change => {
+    const routeContent = change[0]
+    const field = change[1]
+    return R.assocPath(field.keyPath, field.value, routeContent)
+  })
+}
 
 // updatePageContent$$ :: {*} -> {*}
 export const updatePageContent$$ = contentUpdateObj => {
@@ -74,6 +103,16 @@ export const updatePageContent$$ = contentUpdateObj => {
       .catch(err => observer.onError())
   })
 }
+
+// loadSocketIoClient$
+export const loadSocketIoClient$ = Rx.Observable.create(observer => {
+  fetch('https://cdn.socket.io/socket.io-1.4.5.js')
+    .then(() => {
+      observer.onNext()
+      observer.onCompleted()
+    })
+    .catch(err => observer.onError(err))
+})
 
 // // getRouteContent$$ :: {*} -> String -> String -> String -> Observable
 // export const getRouteContent$$ = (projectDomain, env, locale, route) => {

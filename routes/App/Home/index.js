@@ -12,7 +12,6 @@ const Home = ({location, rootContent}) => {
   })
   const content = getContent(route, rootContent)
   console.log('content: ', content)
-  console.log('window.parent.location: ', global.self.location)
 
   const contentList = content.list.map((item, index) => {
     return <li key={index}>{item}</li>

@@ -211,12 +211,26 @@ export const getRootContent = R.curry((projectDomain, route, options) => {
       2) Receive and return subsequent socket.io event for updatedContent
   */
   const getUpdatedContentWS$ = checkIsPreview$
-    .flatMap(isPreview => {
-      if (isPreview) {
+    .flatMap(e => {
+      if (!R.isNil(e)) {
         console.log('In preview...')
-        // TODO: dynamically load io script here
-        const socket = io.connect(config.host + ':' + config.port)
-        return getUpdatedContentWS$$(socket)
+        // Dynamically load socket.io client script here if it's not already loaded
+        if (R.isNil(io)) {
+          console.log('Loading socket.io client...')
+          return loadSocketIoClient$
+            .flatMap(() => {
+              const socket = io.connect(config.host + ':' + config.port)
+              // Once socket.io client is loaded, report back to the parent (cms)
+              e.source.postMessage('preview:ready', e.origin)
+              return getUpdatedContentWS$$(socket)
+            })
+        } else {
+          console.log('socket.io client already loaded')
+          const socket = io.connect(config.host + ':' + config.port)
+          // If socket.io is already loaded, report back to the parent (cms)
+          e.source.postMessage('preview:ready', e.origin)
+          return getUpdatedContentWS$$(socket)
+        }
       } else {
         return Rx.Observable.return({})
       }
@@ -242,7 +256,7 @@ export const getContent = R.curry((route, rootContent) => {
   const contentSchema = JSON.parse(global.localStorage.getItem('contentSchema'))
 
   // Show the content immediately from contentSchema if rootContent hasn't arrived
-  if (R.isNil(rootContent)) {
+  if (R.isNil(rootContent) || R.isEmpty(rootContent)) {
     // Replace contentSchema values with placeholders if contentPlaceholder is true
     if (global.localStorage.getItem('contentPlaceholder') !== 'undefined') {
       const contentPlaceholderChar = global.localStorage.getItem('contentPlaceholder')
